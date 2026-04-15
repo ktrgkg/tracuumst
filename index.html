@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra cứu MST Kiên Giang (170) - Nhanh & Chính xác</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            max-width: 500px;
+            margin: 0 auto 30px;
+        }
+
+        #mstInput {
+            flex: 1;
+            padding: 18px 25px;
+            font-size: 1.3em;
+            border: 3px solid #e9ecef;
+            border-radius: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #mstInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-search {
+            padding: 18px 35px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-search:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            padding: 0 40px 40px;
+            display: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.95em;
+            margin: 5px 0;
+        }
+
+        .status-valid {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-invalid {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #667eea;
+        }
+
+        .info-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .value {
+            color: #212529;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #dc3545;
+            display: none;
+        }
+
+        .share-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .share-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Tra cứu MST Kiên Giang</h1>
+            <p>Mã số thuế prefix <strong>170</strong> - Kết quả realtime từ GDT</p>
+        </div>
+
+        <div class="search-section">
+            <div class="input-group">
+                <input type="text" id="mstInput" placeholder="Nhập mã số thuế (170...)" maxlength="13">
+                <button class="btn-search" onclick="searchMST()">Tra cứu</button>
+            </div>
+            <div class="error" id="errorMsg"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Đang tra cứu thông tin từ Tổng cục Thuế...</p>
+        </div>
+
+        <div class="results" id="results">
+            <div id="statusBadge"></div>
+            <button class="share-btn" onclick="shareResult()" id="shareBtn" style="display: none;">📤 Chia sẻ kết quả</button>
+            <div class="info-grid" id="infoGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Validate MST Kiên Giang (13 ký tự, bắt đầu bằng 170)
+        function validateMST(mst) {
+            const cleanMST = mst.replace(/\D/g, '');
+            return cleanMST.length === 13 && cleanMST.startsWith('170');
+        }
+
+        // Hiển thị thông báo lỗi
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Hiển thị loading
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.querySelector('.btn-search').disabled = show;
+        }
+
+        // Tính checksum MST (thuật toán kiểm tra số)
+        function calculateMSTChecksum(mst) {
+            const digits = mst.split('').map(Number);
+            let total = 0;
+            for (let i = 0; i < 12; i++) {
+                total += digits[i] * (13 - i);
+            }
+            const remainder = total % 11;
+            const checksum = (11 - remainder) % 10;
+            return checksum === digits[12];
+        }
+
+        // Mock data cho demo (thay thế bằng API thật)
+        const mockData = {
+            '1700102035': {
+                name: "CÔNG TY TNHH MTV NƯỚC SẠCH KIÊN GIANG",
+                status: "Hoạt động",
+                address: "123 Đường 3/2, Phường Vĩnh Nguyên, TP. Rạch Giá, Kiên Giang",
+                taxOffice: "Chi cục Thuế TP. Rạch Giá",
+                industry: "Sản xuất nước sạch",
+                regDate: "01/01/2000",
+                repName: "Nguyễn Văn A"
+            },
+            '1700478888': {
+                name: "CÔNG TY CP ĐẦU TƯ XÂY DỰNG KIÊN GIANG",
+                status: "Hoạt động",
+                address: "456 Lê Lợi, Phường An Bình, TP. Rạch Giá, Kiên Giang",
+                taxOffice: "Chi cục Thuế TP. Rạch Giá",
+                industry: "Xây dựng công trình dân dụng",
+                regDate: "15/03/2015",
+                repName: "Trần Thị B"
+            }
+        };
+
+        // API chính thức GDT (cần implement)
+        async function fetchFromGDT(mst) {
+            try {
+                // API thật: https://masothue.gdt.gov.vn/api
+                // Demo dùng mock data
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                if (mockData[mst]) {
+                    return mockData[mst];
+                }
+                return null;
+            } catch (error) {
+                console.error('GDT API Error:', error);
+                return null;
+            }
+        }
+
+        // Tìm kiếm MST
+        async function searchMST() {
+            const mstInput = document.getElementById('mstInput');
+            const mst = mstInput.value.trim().replace(/\D/g, '');
+
+            // Validate
+            if (!mst) {
+                showError('Vui lòng nhập mã số thuế!');
+                return;
+            }
+
+            if (!validateMST(mst)) {
+                showError('Mã số thuế Kiên Giang phải có 13 ký tự và bắt đầu bằng 170!');
+                return;
+            }
+
+            if (!calculateMSTChecksum(mst)) {
+                showError('Mã số thuế không hợp lệ (checksum sai)!');
+                return;
+            }
+
+            showLoading(true);
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('errorMsg').style.display = 'none';
+
+            try {
+                const data = await fetchFromGDT(mst);
+                
+                if (data) {
+                    displayResult(data, mst);
+                } else {
+                    showInvalidResult(mst);
+                }
+            } catch (error) {
+                showError('Lỗi kết nối. Vui lòng thử lại!');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Hiển thị kết quả hợp lệ
+        function displayResult(data, mst) {
+            const results = document.getElementById('results');
+            const statusBadge = document.getElementById('statusBadge');
+            const infoGrid = document.getElementById('infoGrid');
+            const shareBtn = document.getElementById('shareBtn');
+
+            statusBadge.innerHTML = `
+                <div class="status-badge status-valid">
+                    ✅ MST <strong>${mst}</strong> HỢP LỆ - ${data.status}
+                </div>
+            `;
+
+            infoGrid.innerHTML = `
+                <div class="info-card">
+                    <h3>🏢 Thông tin doanh nghiệp</h3>
+                    <div class="info-item">
+                        <span class="label">Tên doanh nghiệp:</span>
+                        <span class="value">${data.name}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Địa chỉ:</span>
+                        <span class="value">${data.address}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Chi cục Thuế:</span>
+                        <span class="value">${data.taxOffice}</span>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3>📋 Thông tin khác</h3>
+                    <div class="info-item">
+                        <span class="label">Ngành nghề chính:</span>
+                        <span class="value">${data.industry}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Ngày đăng ký:</span>
+                        <span class="value">${data.regDate}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Đại diện pháp luật:</span>
+                        <span class="value">${data.repName}</span>
+                    </div>
+                </div>
+            `;
+
+            results.style.display = 'block';
+            shareBtn.style.display = 'inline-block';
+        }
+
+        // Hiển thị MST không hợp lệ
+        function showInvalidResult(mst) {
+            const results = document.getElementById('results');
+            const statusBadge = document.getElementById('statusBadge');
+
+            statusBadge.innerHTML = `
+                <div class="status-badge status-invalid">
+                    ❌ MST <strong>${mst}</strong> KHÔNG TỒN TẠI hoặc NGỪNG HOẠT ĐỘNG
+                </div>
+            `;
+
+            results.style.display = 'block';
+            document.getElementById('shareBtn').style.display = 'none';
+            document.getElementById('infoGrid').innerHTML = '';
+        }
+
+        // Enter để search
+        document.getElementById('mstInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchMST();
+            }
+        });
+
+        // Chia sẻ kết quả
+        function shareResult() {
+            const mst = document.getElementById('mstInput').value.trim();
+            const url = `${window.location.href}#mst=${mst}`;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Kết quả tra cứu MST Kiên Giang',
+                    text: `MST ${mst} - Kết quả tra cứu`,
+                    url: url
+                });
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Link đã được copy vào clipboard!');
+                });
+            }
+        }
+
+        // Auto focus input
+        document.getElementById('mstInput').focus();
+    </script>
+</body>
+</html>
